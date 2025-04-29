@@ -1,0 +1,52 @@
+year,make,model,trim,engine,transmission,bodyType,originCountry,isImported,availableInMexico,mexicanName,fuelType,cylinderCount,displacement,driveType
+2023,Nissan,Versa,Advance,1.6L,Manual,Sedan,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Nissan,Versa,Exclusive CVT,1.6L,CVT,Sedan,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Nissan,Sentra,SR,2.0L,CVT,Sedan,Mexico,false,true,,Gasolina,4,2.0L,FWD
+2023,Nissan,Tsuru,Typical,1.6L,Manual,Sedan,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Chevrolet,Aveo,LS,1.5L,Manual,Sedan,Mexico,false,true,Aveo / Sonic,Gasolina,4,1.5L,FWD
+2023,Chevrolet,Aveo,LTZ,1.5L,Automatica,Sedan,Mexico,false,true,Aveo / Sonic,Gasolina,4,1.5L,FWD
+2023,Chevrolet,Onix,Premier,1.0L Turbo,Automatica,Sedan,Mexico,false,true,,Gasolina,3,1.0L,FWD
+2023,Volkswagen,Jetta,Trendline,1.4L TSI,Automatica,Sedan,Mexico,false,true,,Gasolina,4,1.4L,FWD
+2023,Volkswagen,Jetta,Highline,1.4L TSI,DSG,Sedan,Mexico,false,true,,Gasolina,4,1.4L,FWD
+2023,KIA,Rio,LX,1.6L,Automatica,Sedan,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,KIA,Seltos,EX,2.0L,CVT,SUV,Mexico,false,true,,Gasolina,4,2.0L,FWD
+2023,KIA,Forte,GT-Line,2.0L,Automatica,Sedan,Mexico,false,true,,Gasolina,4,2.0L,FWD
+2023,Honda,Civic,Touring,1.5L Turbo,CVT,Sedan,Japan,false,true,,Gasolina,4,1.5L,FWD
+2023,Honda,CR-V,Touring,1.5L Turbo,CVT,SUV,Mexico,false,true,,Gasolina,4,1.5L,AWD
+2023,Honda,Accord,Sport,1.5L Turbo,CVT,Sedan,Japan,false,true,,Gasolina,4,1.5L,FWD
+2023,Mazda,Mazda3,i Sport,2.0L,Automatica,Sedan,Mexico,false,true,,Gasolina,4,2.0L,FWD
+2023,Mazda,Mazda3,i Grand Touring,2.5L,Automatica,Sedan,Mexico,false,true,,Gasolina,4,2.5L,FWD
+2023,Toyota,Corolla,LE,1.8L,CVT,Sedan,Mexico,false,true,,Gasolina,4,1.8L,FWD
+2023,Toyota,RAV4,XLE,2.5L,Automatica,SUV,Japan,false,true,,Gasolina,4,2.5L,AWD
+2023,Toyota,Camry,LE,2.5L,Automatica,Sedan,USA,true,true,,Gasolina,4,2.5L,FWD
+2022,Chevrolet,Silverado,LT,5.3L V8,Automatica,Pickup,USA,true,true,,Gasolina,8,5.3L,4WD
+2022,Ford,F-150,XLT,3.5L EcoBoost,Automatica,Pickup,USA,true,true,,Gasolina,6,3.5L,4WD
+2022,Ford,Lobo,Platinum,3.5L EcoBoost,Automatica,Pickup,USA,true,true,F-150,Gasolina,6,3.5L,4WD
+2022,Ford,Raptor,Raptor,3.5L EcoBoost,Automatica,Pickup,USA,true,true,F-150 Raptor,Gasolina,6,3.5L,4WD
+2022,Dodge,Ram,Limited,5.7L HEMI V8,Automatica,Pickup,USA,true,true,RAM 1500,Gasolina,8,5.7L,4WD
+2022,Ford,Explorer,Limited,3.0L EcoBoost,Automatica,SUV,USA,true,true,,Gasolina,6,3.0L,AWD
+2022,Jeep,Grand Cherokee,Limited,3.6L V6,Automatica,SUV,USA,true,true,,Gasolina,6,3.6L,4WD
+2022,Jeep,Wrangler,Unlimited Sahara,3.6L V6,Automatica,SUV,USA,true,true,,Gasolina,6,3.6L,4WD
+2023,Mercedes-Benz,Clase C,C200,2.0L Turbo,Automatica,Sedan,Germany,true,true,,Gasolina,4,2.0L,RWD
+2023,BMW,Serie 3,320i,2.0L Turbo,Automatica,Sedan,Germany,true,true,,Gasolina,4,2.0L,RWD
+2023,Audi,A4,S line,2.0L TFSI,Automatica,Sedan,Germany,true,true,,Gasolina,4,2.0L,AWD
+2023,Volkswagen,Taos,Highline,1.4L TSI,DSG,SUV,Mexico,false,true,,Gasolina,4,1.4L,FWD
+2023,Volkswagen,Tiguan,Comfortline,1.4L TSI,DSG,SUV,Mexico,false,true,,Gasolina,4,1.4L,FWD
+2023,Renault,Duster,Intens,1.6L,CVT,SUV,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Renault,Kwid,Iconic,1.0L,Manual,Hatchback,Mexico,false,true,,Gasolina,3,1.0L,FWD
+2023,Suzuki,Swift,GLX,1.2L,CVT,Hatchback,India,false,true,,Gasolina,4,1.2L,FWD
+2023,Suzuki,Ignis,GLX,1.2L,Automatica,Hatchback,India,false,true,,Gasolina,4,1.2L,FWD
+2023,Hyundai,Tucson,Limited,2.0L,Automatica,SUV,South Korea,false,true,,Gasolina,4,2.0L,FWD
+2023,Hyundai,Accent,GLS,1.6L,Automatica,Sedan,South Korea,false,true,,Gasolina,4,1.6L,FWD
+2023,SEAT,Ibiza,Reference,1.6L,Automatica,Hatchback,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,SEAT,Leon,FR,1.4L TSI,DSG,Hatchback,Mexico,false,true,,Gasolina,4,1.4L,FWD
+2023,Peugeot,208,Active,1.2L PureTech,Automatica,Hatchback,Mexico,false,true,,Gasolina,3,1.2L,FWD
+2023,Peugeot,3008,GT Line,1.6L THP,Automatica,SUV,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Fiat,Argo,HGT,1.8L,Automatica,Hatchback,Mexico,false,true,,Gasolina,4,1.8L,FWD
+2022,GMC,Sierra,Denali,6.2L V8,Automatica,Pickup,USA,true,true,,Gasolina,8,6.2L,4WD
+2022,Chevrolet,Tahoe,RST,5.3L V8,Automatica,SUV,USA,true,true,,Gasolina,8,5.3L,4WD
+2022,Ford,Mustang,GT,5.0L V8,Automatica,Coupe,USA,true,true,,Gasolina,8,5.0L,RWD
+2022,Dodge,Challenger,R/T,5.7L HEMI V8,Automatica,Coupe,USA,true,true,,Gasolina,8,5.7L,RWD
+2022,Chevrolet,Camaro,SS,6.2L V8,Automatica,Coupe,USA,true,true,,Gasolina,8,6.2L,RWD
+2023,Nissan,Kicks,Advance,1.6L,CVT,SUV,Mexico,false,true,,Gasolina,4,1.6L,FWD
+2023,Nissan,Altima,Exclusive,2.5L,CVT,Sedan,USA,true,true,,Gasolina,4,2.5L,FWD
