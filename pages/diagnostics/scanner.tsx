@@ -1,0 +1,1239 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, Bluetooth, Activity, AlertCircle, Terminal, Cpu, ScanLine, ShieldAlert } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+// Extender la interfaz Navigator para Web Bluetooth API
+declare global {
+  interface Navigator {
+    bluetooth?: {
+      requestDevice(options: any): Promise<any>;
+    };
+  }
+}
+
+enum ScanStep {
+  INSTRUCTIONS,
+  CONNECTING,
+  SCANNING,
+  RESULTS
+}
+
+interface ScanResult {
+  code: string;
+  description: string;
+  severity: 'alta' | 'media' | 'baja';
+}
+
+// Interfaz para los datos de códigos OBD
+interface OBDCodeData {
+  descripcion: string;
+  causas: string[];
+  refacciones: string[];
+}
+
+// Base de datos de códigos OBD con descripciones, causas y refacciones sugeridas
+const obdCodeDatabase: {[key: string]: OBDCodeData} = {
+  "P0100": {
+    descripcion: "Circuito de flujo de masa de aire",
+    causas: [
+      "Sensor MAF defectuoso",
+      "Cableado en corto o abierto",
+      "Filtro de aire excesivamente sucio"
+    ],
+    refacciones: [
+      "Sensor MAF",
+      "Filtro de aire",
+      "Arnés de cableado de MAF"
+    ]
+  },
+  "P0101": {
+    descripcion: "Rango/rendimiento del circuito de flujo de masa de aire",
+    causas: [
+      "Sensor MAF contaminado",
+      "Fugas de vacío",
+      "Obstrucción en el sistema de admisión"
+    ],
+    refacciones: [
+      "Sensor MAF",
+      "Limpiador de sensores MAF",
+      "Tubería de admisión",
+      "Sellos y juntas del sistema de admisión"
+    ]
+  },
+  "P0102": {
+    descripcion: "Entrada baja del circuito de flujo de masa de aire",
+    causas: [
+      "Conector desconectado",
+      "Corto en el cableado",
+      "Sensor MAF defectuoso"
+    ],
+    refacciones: [
+      "Sensor MAF",
+      "Arnés de cableado"
+    ]
+  },
+  "P0103": {
+    descripcion: "Entrada alta del circuito de flujo de masa de aire",
+    causas: [
+      "Corto a voltaje",
+      "Sensor MAF defectuoso",
+      "ECU dañada"
+    ],
+    refacciones: [
+      "Sensor MAF",
+      "Arnés de cableado"
+    ]
+  },
+  "P0106": {
+    descripcion: "Presión absoluta del colector/presión barométrica - rango/rendimiento",
+    causas: [
+      "Sensor MAP defectuoso",
+      "Fugas de vacío",
+      "Líneas de vacío dañadas"
+    ],
+    refacciones: [
+      "Sensor MAP",
+      "Mangueras de vacío",
+      "Kit de sellos del múltiple de admisión"
+    ]
+  },
+  "P0117": {
+    descripcion: "Temperatura del refrigerante - entrada baja",
+    causas: [
+      "Sensor ECT defectuoso",
+      "Cableado en corto",
+      "Problema en el circuito de tierra"
+    ],
+    refacciones: [
+      "Sensor ECT",
+      "Arnés de cableado del sensor",
+      "Conector del sensor"
+    ]
+  },
+  "P0118": {
+    descripcion: "Temperatura del refrigerante - entrada alta",
+    causas: [
+      "Sensor ECT defectuoso",
+      "Circuito abierto en cableado",
+      "Mal contacto en conector"
+    ],
+    refacciones: [
+      "Sensor ECT",
+      "Arnés de cableado del sensor",
+      "Termostato"
+    ]
+  },
+  "P0128": {
+    descripcion: "Temperatura del refrigerante debajo del umbral del termostato",
+    causas: [
+      "Termostato defectuoso",
+      "Sensor ECT defectuoso",
+      "Problemas en el sistema de enfriamiento"
+    ],
+    refacciones: [
+      "Termostato",
+      "Sensor ECT",
+      "Bomba de agua"
+    ]
+  },
+  "P0133": {
+    descripcion: "Respuesta lenta del sensor de oxígeno 1",
+    causas: [
+      "Sensor de oxígeno contaminado o defectuoso",
+      "Fugas en el múltiple de escape",
+      "Sensor MAF sucio"
+    ],
+    refacciones: [
+      "Sensor de oxígeno (O2)",
+      "Sensor MAF",
+      "Juntas de múltiple de escape",
+      "Limpiador de inyectores"
+    ]
+  },
+  "P0171": {
+    descripcion: "Sistema demasiado pobre (banco 1)",
+    causas: [
+      "Fugas de vacío",
+      "Fugas en los inyectores",
+      "Sensor MAF sucio",
+      "Bomba de combustible débil"
+    ],
+    refacciones: [
+      "Sensor MAF",
+      "Filtro de combustible",
+      "Bomba de combustible",
+      "Kit de sellos de inyectores"
+    ]
+  },
+  "P0172": {
+    descripcion: "Sistema demasiado rico (banco 1)",
+    causas: [
+      "Inyectores con fugas",
+      "Regulador de presión de combustible defectuoso",
+      "Sensor MAF contaminado"
+    ],
+    refacciones: [
+      "Inyectores de combustible",
+      "Regulador de presión",
+      "Sensor MAF"
+    ]
+  },
+  "P0300": {
+    descripcion: "Detectada falla de encendido aleatoria/múltiple",
+    causas: [
+      "Bujías desgastadas",
+      "Cables de encendido deteriorados",
+      "Problemas de compresión",
+      "Inyectores sucios"
+    ],
+    refacciones: [
+      "Juego de bujías",
+      "Cables de bujías",
+      "Kit de limpieza de inyectores",
+      "Bobinas de encendido"
+    ]
+  },
+  "P0301": {
+    descripcion: "Cilindro 1 - fallo de encendido detectado",
+    causas: [
+      "Bujía defectuosa",
+      "Cable de bujía dañado",
+      "Bobina de encendido defectuosa",
+      "Inyector obstruido"
+    ],
+    refacciones: [
+      "Bujía para cilindro 1",
+      "Cable de encendido",
+      "Bobina de encendido",
+      "Inyector de combustible"
+    ]
+  },
+  "P0302": {
+    descripcion: "Cilindro 2 - fallo de encendido detectado",
+    causas: [
+      "Bujía defectuosa",
+      "Cable de bujía dañado",
+      "Bobina de encendido defectuosa",
+      "Inyector obstruido"
+    ],
+    refacciones: [
+      "Bujía para cilindro 2",
+      "Cable de encendido",
+      "Bobina de encendido",
+      "Inyector de combustible"
+    ]
+  },
+  "P0303": {
+    descripcion: "Cilindro 3 - fallo de encendido detectado",
+    causas: [
+      "Bujía defectuosa",
+      "Cable de bujía dañado",
+      "Bobina de encendido defectuosa",
+      "Inyector obstruido"
+    ],
+    refacciones: [
+      "Bujía para cilindro 3",
+      "Cable de encendido",
+      "Bobina de encendido",
+      "Inyector de combustible"
+    ]
+  },
+  "P0304": {
+    descripcion: "Cilindro 4 - fallo de encendido detectado",
+    causas: [
+      "Bujía defectuosa",
+      "Cable de bujía dañado",
+      "Bobina de encendido defectuosa",
+      "Inyector obstruido"
+    ],
+    refacciones: [
+      "Bujía para cilindro 4",
+      "Cable de encendido",
+      "Bobina de encendido",
+      "Inyector de combustible"
+    ]
+  },
+  "P0401": {
+    descripcion: "Flujo insuficiente en el sistema EGR",
+    causas: [
+      "Válvula EGR obstruida",
+      "Pasajes EGR obstruidos",
+      "Solenoide EGR defectuoso"
+    ],
+    refacciones: [
+      "Válvula EGR",
+      "Kit de limpieza de válvula EGR",
+      "Solenoide EGR"
+    ]
+  },
+  "P0420": {
+    descripcion: "Eficiencia del sistema catalizador por debajo del umbral (banco 1)",
+    causas: [
+      "Convertidor catalítico deteriorado",
+      "Fugas en el escape",
+      "Sensores de oxígeno defectuosos"
+    ],
+    refacciones: [
+      "Convertidor catalítico",
+      "Sensores de oxígeno (pre y post-cat)",
+      "Juntas del sistema de escape"
+    ]
+  },
+  "P0430": {
+    descripcion: "Eficiencia del sistema catalizador por debajo del umbral (banco 2)",
+    causas: [
+      "Convertidor catalítico deteriorado",
+      "Fugas en el escape",
+      "Sensores de oxígeno defectuosos"
+    ],
+    refacciones: [
+      "Convertidor catalítico (banco 2)",
+      "Sensores de oxígeno (pre y post-cat)",
+      "Juntas del sistema de escape"
+    ]
+  },
+  "P0440": {
+    descripcion: "Sistema de control de emisiones por evaporación - falla",
+    causas: [
+      "Tapón de combustible suelto o defectuoso",
+      "Mangueras EVAP agrietadas",
+      "Válvula de purga defectuosa"
+    ],
+    refacciones: [
+      "Tapón de combustible",
+      "Válvula de purga EVAP",
+      "Kit de mangueras EVAP"
+    ]
+  },
+  "P0442": {
+    descripcion: "Fuga pequeña detectada en sistema EVAP",
+    causas: [
+      "Tapón de combustible dañado",
+      "Mangueras EVAP agrietadas",
+      "Canister EVAP dañado",
+      "Válvula de ventilación defectuosa"
+    ],
+    refacciones: [
+      "Tapón de combustible",
+      "Kit de mangueras EVAP",
+      "Canister EVAP",
+      "Válvula de ventilación"
+    ]
+  },
+  "P0455": {
+    descripcion: "Fuga grande detectada en sistema EVAP",
+    causas: [
+      "Tapón de combustible ausente o muy dañado",
+      "Mangueras EVAP desconectadas",
+      "Canister EVAP agrietado",
+      "Válvula de purga atascada"
+    ],
+    refacciones: [
+      "Tapón de combustible",
+      "Kit de mangueras EVAP",
+      "Canister EVAP",
+      "Válvula de purga"
+    ]
+  },
+  "P0456": {
+    descripcion: "Fuga muy pequeña detectada en sistema EVAP",
+    causas: [
+      "Tapón de combustible desgastado",
+      "Mangueras EVAP con grietas pequeñas",
+      "Sellos del sistema de combustible deteriorados"
+    ],
+    refacciones: [
+      "Tapón de combustible",
+      "Kit de mangueras EVAP",
+      "Kit de sellos EVAP"
+    ]
+  },
+  "P0500": {
+    descripcion: "Sensor de velocidad del vehículo - mal funcionamiento",
+    causas: [
+      "Sensor de velocidad defectuoso",
+      "Problemas en el cableado",
+      "Problemas en el conector",
+      "Anillo del ABS dañado"
+    ],
+    refacciones: [
+      "Sensor de velocidad del vehículo",
+      "Arnés de cableado",
+      "Anillo del ABS (si aplica)"
+    ]
+  },
+  "P0505": {
+    descripcion: "Sistema de control de marcha mínima - mal funcionamiento",
+    causas: [
+      "Válvula IAC defectuosa",
+      "Cuerpo de aceleración sucio",
+      "Fugas de vacío en múltiple de admisión"
+    ],
+    refacciones: [
+      "Válvula IAC",
+      "Kit de limpieza de cuerpo de aceleración",
+      "Empaque de múltiple de admisión"
+    ]
+  },
+  "P0507": {
+    descripcion: "Velocidad de marcha mínima superior a la esperada",
+    causas: [
+      "Válvula IAC atascada",
+      "Fugas de vacío",
+      "Cuerpo de aceleración sucio o con problemas"
+    ],
+    refacciones: [
+      "Válvula IAC",
+      "Kit de limpieza de cuerpo de aceleración",
+      "Kit de sellos de vacío"
+    ]
+  },
+  "P0700": {
+    descripcion: "Sistema de control de transmisión - mal funcionamiento",
+    causas: [
+      "Problemas en el TCM",
+      "Falla en el solenoide de transmisión",
+      "Problemas en el cableado",
+      "Baja presión de líquido de transmisión"
+    ],
+    refacciones: [
+      "Solenoide de transmisión",
+      "Filtro de transmisión",
+      "Líquido de transmisión",
+      "Kit de reparación de arnés"
+    ]
+  },
+  "P0845": {
+    descripcion: "Interruptor de presión del líquido de transmisión - circuito 3",
+    causas: [
+      "Nivel bajo de líquido de transmisión",
+      "Filtro de transmisión obstruido",
+      "Sensor de presión defectuoso",
+      "Problemas en el cableado"
+    ],
+    refacciones: [
+      "Líquido de transmisión",
+      "Filtro de transmisión",
+      "Sensor de presión",
+      "Empaques de transmisión"
+    ]
+  },
+  "P0000": {
+    descripcion: "No se han detectado códigos de error",
+    causas: [
+      "No hay problemas detectados en el vehículo",
+      "El sistema OBD está funcionando correctamente",
+      "No se requiere ninguna acción"
+    ],
+    refacciones: [
+      "No se requieren refacciones",
+      "Mantenimiento preventivo recomendado"
+    ]
+  }
+};
+
+// Función para interpretar la descripción y obtener todos los datos de códigos OBD
+const getCodeData = (code: string): OBDCodeData => {
+  if (obdCodeDatabase[code]) {
+    return obdCodeDatabase[code];
+  } else {
+    // Datos genéricos para códigos desconocidos
+    return {
+      descripcion: `Código ${code} - Consulta un manual de servicio para más detalles`,
+      causas: [
+        "Componente específico relacionado con el código", 
+        "Problema eléctrico", 
+        "Falla del sensor"
+      ],
+      refacciones: [
+        "Sensor relacionado con el sistema", 
+        "Arnés de cableado", 
+        "Componente específico relacionado"
+      ]
+    };
+  }
+};
+
+// Función simplificada que solo devuelve la descripción para compatibilidad
+const getCodeDescription = (code: string): string => {
+  return getCodeData(code).descripcion;
+};
+
+// Determinar severidad del código
+const getCodeSeverity = (code: string): 'alta' | 'media' | 'baja' => {
+  // Códigos que requieren atención inmediata
+  const highSeverityCodes = ["P0340", "P0335", "P0336", "P0117", "P0118", "P0128", "P0505", "P0507", "P0508"];
+  // Códigos que se pueden atender pronto pero no urgentes
+  const mediumSeverityCodes = ["P0171", "P0174", "P0300", "P0301", "P0302", "P0303", "P0304", "P0401", "P0440"];
+  
+  if (highSeverityCodes.some(c => code.startsWith(c))) {
+    return 'alta';
+  } else if (mediumSeverityCodes.some(c => code.startsWith(c))) {
+    return 'media';
+  } else {
+    return 'baja';
+  }
+};
+
+export default function ScannerDiagnostic() {
+  const [, setLocation] = useLocation();
+  const [step, setStep] = useState<ScanStep>(ScanStep.INSTRUCTIONS);
+  const [results, setResults] = useState<ScanResult[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [scanText, setScanText] = useState<string[]>([]);
+  const [connectionMessages, setConnectionMessages] = useState<string[]>([]);
+  const [obdDevice, setObdDevice] = useState<any | null>(null);
+  const [obdServer, setObdServer] = useState<any | null>(null);
+  const [obdService, setObdService] = useState<any | null>(null);
+  const [obdCharacteristic, setObdCharacteristic] = useState<any | null>(null);
+  const [manualCode, setManualCode] = useState<string>('');
+  const [showManualInput, setShowManualInput] = useState<boolean>(false);
+  const { toast } = useToast();
+
+  // Función para verificar si el navegador soporta Web Bluetooth API
+  const isWebBluetoothSupported = () => {
+    return 'bluetooth' in navigator;
+  };
+
+  // Función para conectar con dispositivo OBD2 por Bluetooth
+  const connectOBD = async () => {
+    if (!isWebBluetoothSupported()) {
+      toast({
+        title: "Bluetooth no soportado",
+        description: "Tu navegador no soporta Web Bluetooth API. Usa Chrome en escritorio o Android.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setStep(ScanStep.CONNECTING);
+      setIsConnecting(true);
+      addConnectionMessage("Buscando escáner OBD2 por Bluetooth...");
+
+      const device = await navigator.bluetooth?.requestDevice({
+        filters: [
+          { namePrefix: "OBD" }, 
+          { namePrefix: "ELM" }, 
+          { namePrefix: "OBDII" }
+        ],
+        optionalServices: [0xfff0] // UUID genérico para ELM327 BLE
+      });
+
+      if (!device) {
+        throw new Error("No se pudo encontrar un dispositivo compatible");
+      }
+
+      addConnectionMessage(`Dispositivo encontrado: ${device.name}`);
+      
+      addConnectionMessage("Conectando al dispositivo...");
+      const server = await device.gatt?.connect();
+      
+      if (!server) {
+        throw new Error("No se pudo conectar al servidor GATT");
+      }
+      
+      addConnectionMessage("Accediendo a servicios BLE...");
+      const service = await server.getPrimaryService(0xfff0);
+      
+      addConnectionMessage("Accediendo a características BLE...");
+      const characteristic = await service.getCharacteristic(0xfff2);
+      
+      // Guardar referencias para uso futuro
+      setObdDevice(device);
+      setObdServer(server);
+      setObdService(service);
+      setObdCharacteristic(characteristic);
+      
+      addConnectionMessage("Conexión completada. Dispositivo listo.");
+      
+      // Añadir listener para desconexiones
+      device.addEventListener('gattserverdisconnected', onDisconnected);
+      
+      // Iniciar escaneo real
+      startScan();
+    } catch (error: any) {
+      addConnectionMessage(`Error: ${error.message}`);
+      toast({
+        title: "Error de conexión",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsConnecting(false);
+      setStep(ScanStep.INSTRUCTIONS);
+    }
+  };
+
+  // Función para agregar mensajes al log de conexión
+  const addConnectionMessage = (message: string) => {
+    setConnectionMessages(prev => [...prev, message]);
+  };
+
+  // Manejar desconexión
+  const onDisconnected = () => {
+    addConnectionMessage("Dispositivo desconectado.");
+    toast({
+      title: "Desconectado",
+      description: "El dispositivo OBD2 se ha desconectado.",
+      variant: "destructive"
+    });
+    setObdDevice(null);
+    setObdServer(null);
+    setObdService(null);
+    setObdCharacteristic(null);
+  };
+
+  // Enviar comando OBD y recibir respuesta
+  const sendOBDCommand = async (command: string): Promise<string> => {
+    if (!obdCharacteristic) {
+      throw new Error("No hay conexión con dispositivo OBD2");
+    }
+    
+    try {
+      const cmd = `${command}\r`;
+      const encoder = new TextEncoder();
+      await obdCharacteristic.writeValue(encoder.encode(cmd));
+      
+      // Esperar respuesta
+      const value = await obdCharacteristic.readValue();
+      const decoder = new TextDecoder("utf-8");
+      return decoder.decode(value.buffer);
+    } catch (error: any) {
+      console.error("Error al enviar comando OBD:", error);
+      throw error;
+    }
+  };
+
+  // Función para parsear códigos de error OBD
+  const parseOBDCodes = (response: string): string[] => {
+    const codes: string[] = [];
+    // Ejemplo de respuesta: "43 01 33 00 00 00 00"
+    // 43 es la respuesta a comando 03 (códigos de error)
+    // Los siguientes bytes son los códigos
+    
+    if (response.startsWith("43")) {
+      const parts = response.split(" ");
+      for (let i = 1; i < parts.length; i += 2) {
+        if (parts[i] !== "00" || parts[i+1] !== "00") {
+          // Convertir bytes a código DTC
+          const dtcLetter = getDTCLetter(parseInt(parts[i][0], 16));
+          const dtcNum = parts[i][1] + parts[i+1];
+          codes.push(`${dtcLetter}${dtcNum}`);
+        }
+      }
+    }
+    return codes;
+  };
+  
+  // Función auxiliar para convertir primer byte a letra de código
+  const getDTCLetter = (value: number): string => {
+    switch (value) {
+      case 0: return "P0";
+      case 1: return "P1";
+      case 2: return "P2";
+      case 3: return "P3";
+      case 4: return "C0";
+      case 5: return "C1";
+      case 6: return "C2";
+      case 7: return "C3";
+      case 8: return "B0";
+      case 9: return "B1";
+      case 10: return "B2";
+      case 11: return "B3";
+      case 12: return "U0";
+      case 13: return "U1";
+      case 14: return "U2";
+      case 15: return "U3";
+      default: return "P0";
+    }
+  };
+
+  // Función para procesar un código OBD ingresado manualmente
+  const processManualCode = () => {
+    // Validar el formato del código
+    const codePattern = /^[PCBU][0-9][0-9][0-9][0-9]$/;
+    if (!codePattern.test(manualCode)) {
+      toast({
+        title: "Código inválido",
+        description: "El formato debe ser una letra (P, C, B, U) seguida de 4 números. Ejemplo: P0300",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Verificar si el código existe en la base de datos
+    if (!obdCodeDatabase[manualCode]) {
+      toast({
+        title: "Código no encontrado",
+        description: "El código OBD ingresado no se encuentra en nuestra base de datos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Determinar la severidad del código
+    let severity: 'alta' | 'media' | 'baja' = 'media';
+    
+    if (manualCode.startsWith('P0')) {
+      // Los códigos P0 son genéricos y suelen ser más comunes/menos severos
+      if (['P0171', 'P0172', 'P0300', 'P0301', 'P0302', 'P0303', 'P0304', 'P0305', 'P0306', 'P0307', 'P0308'].includes(manualCode)) {
+        severity = 'alta';
+      } else {
+        severity = 'media';
+      }
+    } else if (manualCode.startsWith('P1') || manualCode.startsWith('U') || manualCode.startsWith('C')) {
+      // Códigos específicos del fabricante o de red/chasis suelen ser más severos
+      severity = 'alta';
+    } else if (manualCode.startsWith('B')) {
+      // Códigos de carrocería suelen ser menos críticos para la operación
+      severity = 'baja';
+    }
+    
+    // Crear el resultado
+    const result: ScanResult = {
+      code: manualCode,
+      description: obdCodeDatabase[manualCode].descripcion,
+      severity: severity
+    };
+    
+    // Simular proceso de escaneo para mantener la experiencia
+    setStep(ScanStep.SCANNING);
+    setIsScanning(true);
+    setScanText([]);
+    
+    // Mensajes para la experiencia de introducción manual
+    const messages = [
+      "Procesando código manual...",
+      "Buscando en base de datos OBD...",
+      "Verificando código " + manualCode + "...",
+      "Analizando información del código...",
+      "Determinando causas probables...",
+      "Identificando refacciones necesarias..."
+    ];
+    
+    // Mostrar resultados después de la "simulación"
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < messages.length) {
+        setScanText(prev => [...prev, messages[i]]);
+        i++;
+      } else {
+        clearInterval(interval);
+        setIsScanning(false);
+        setResults([result]);
+        setStep(ScanStep.RESULTS);
+        
+        // Restablecer entrada manual
+        setManualCode('');
+        setShowManualInput(false);
+      }
+    }, 500);
+  };
+
+  // Iniciar proceso de escaneo
+  const startScan = async () => {
+    setStep(ScanStep.SCANNING);
+    setIsScanning(true);
+    setScanText([]); // Reiniciar los mensajes
+
+    // Si estamos conectados a un dispositivo real, usamos eso
+    if (obdDevice && obdCharacteristic) {
+      try {
+        setScanText(["Inicializando protocolo OBD-II..."]);
+        
+        // Inicializar y configurar ELM327
+        await sendOBDCommand("ATZ"); // Reset
+        await new Promise(r => setTimeout(r, 1000)); // Esperar reset
+        await sendOBDCommand("ATE0"); // Echo off
+        await sendOBDCommand("ATL0"); // Linefeeds off
+        await sendOBDCommand("ATH0"); // Headers off
+        await sendOBDCommand("ATS0"); // Spaces off
+        await sendOBDCommand("ATSP0"); // Auto protocol
+        
+        setScanText(prev => [...prev, "Escaneando Unidades de Control Electrónico (ECU)..."]);
+        await new Promise(r => setTimeout(r, 700));
+        
+        setScanText(prev => [...prev, "Leyendo códigos de avería (DTCs)..."]);
+        const dtcResponse = await sendOBDCommand("03"); // Leer DTCs
+        const codes = parseOBDCodes(dtcResponse);
+        
+        setScanText(prev => [...prev, "Analizando datos en tiempo real..."]);
+        await new Promise(r => setTimeout(r, 700));
+        
+        setScanText(prev => [...prev, "Verificando registros de funcionamiento..."]);
+        await new Promise(r => setTimeout(r, 700));
+        
+        setScanText(prev => [...prev, "Recopilando información de sensores..."]);
+        await new Promise(r => setTimeout(r, 700));
+        
+        setScanText(prev => [...prev, "Decodificando mensajes de diagnóstico..."]);
+        await new Promise(r => setTimeout(r, 700));
+        
+        // Procesar los códigos encontrados
+        if (codes.length > 0) {
+          const scanResults: ScanResult[] = codes.map(code => ({
+            code,
+            description: getCodeDescription(code),
+            severity: getCodeSeverity(code)
+          }));
+          setResults(scanResults);
+        } else {
+          // Si no hay códigos, mostramos un resultado de todo bien
+          setResults([
+            {
+              code: 'P0000',
+              description: 'No se han detectado códigos de error',
+              severity: 'baja'
+            }
+          ]);
+        }
+        
+        setIsScanning(false);
+        setStep(ScanStep.RESULTS);
+        
+      } catch (error: any) {
+        console.error("Error durante el escaneo:", error);
+        toast({
+          title: "Error en el escaneo",
+          description: error.message,
+          variant: "destructive"
+        });
+        
+        // Fallback a simulación como respaldo
+        simulateScan();
+      }
+    } else {
+      // Fallback para simular escaneo si no hay conexión real
+      simulateScan();
+    }
+  };
+  
+  // Función para simulación de escaneo como respaldo
+  const simulateScan = () => {
+    // Simulación del tiempo de escaneo
+    setTimeout(() => {
+      setIsScanning(false);
+      
+      // Generar resultados de ejemplo
+      setResults([
+        {
+          code: 'P0301',
+          description: 'Cilindro 1 - fallo de encendido detectado',
+          severity: 'media'
+        }
+      ]);
+      
+      setStep(ScanStep.RESULTS);
+    }, 5000);
+  };
+
+  // Animación de mensajes de escaneo secuencial
+  useEffect(() => {
+    if (step === ScanStep.SCANNING && scanText.length === 0) {
+      const scanSequence = [
+        "Inicializando protocolo OBD-II...",
+        "Escaneando Unidades de Control Electrónico (ECU)...",
+        "Leyendo códigos de avería (DTCs)...",
+        "Analizando datos en tiempo real...",
+        "Verificando registros de funcionamiento...",
+        "Recopilando información de sensores...",
+        "Decodificando mensajes de diagnóstico..."
+      ];
+      
+      let currentIndex = 0;
+      const intervalId = setInterval(() => {
+        if (currentIndex < scanSequence.length) {
+          setScanText(prev => [...prev, scanSequence[currentIndex]]);
+          currentIndex++;
+        } else {
+          clearInterval(intervalId);
+        }
+      }, 700);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [step, scanText.length]);
+
+  const getSeverityLabel = (severity: string) => {
+    switch (severity) {
+      case 'alta':
+        return 'Alto';
+      case 'media':
+        return 'Medio';
+      case 'baja':
+        return 'Bajo';
+      default:
+        return 'Medio';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'alta':
+        return 'text-red-500 bg-red-100 dark:bg-red-900/20';
+      case 'media':
+        return 'text-amber-500 bg-amber-100 dark:bg-amber-900/20';
+      case 'baja':
+        return 'text-green-500 bg-green-100 dark:bg-green-900/20';
+      default:
+        return 'text-amber-500 bg-amber-100 dark:bg-amber-900/20';
+    }
+  };
+
+  // Modificar el color del texto según la severidad para el estilo terminal
+  const getTerminalSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'alta':
+        return 'text-red-500';
+      case 'media':
+        return 'text-amber-400';
+      case 'baja':
+        return 'text-green-400';
+      default:
+        return 'text-amber-400';
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-zinc-950">
+      {/* Header */}
+      <header className="border-b border-zinc-800 p-4 bg-black flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="relative w-10 h-10 bg-zinc-800 rounded-md flex items-center justify-center mr-4 border border-zinc-700">
+            <Cpu className="h-5 w-5 text-amber-400" />
+            <div className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+          </div>
+          <div className="font-mono uppercase tracking-wide text-zinc-300">
+            <span className="text-amber-500 font-bold">AUTOLOGIC OBD</span>
+            <span className="ml-2 text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-amber-400">SCANNER</span>
+          </div>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+          onClick={() => setLocation('/')}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 p-6">
+        <div className="w-full max-w-3xl mx-auto">
+          {/* Terminal container */}
+          <div className="bg-black border border-zinc-800 rounded-md p-4 font-mono text-sm">
+            {/* Terminal header */}
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <ScanLine className="h-4 w-4 text-amber-400 mr-2" />
+                <span className="text-xs uppercase text-amber-400">AUTOLOGIC OBD SCANNER</span>
+              </div>
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></div>
+              </div>
+            </div>
+            
+            {/* Terminal content */}
+            <div className="border border-zinc-800 rounded-md overflow-hidden">
+              <div className="bg-zinc-900 px-3 py-2 text-xs border-b border-zinc-800">
+                {step === ScanStep.INSTRUCTIONS && <span>Instrucciones de conexión</span>}
+                {step === ScanStep.CONNECTING && <span>Conectando con dispositivo OBD2</span>}
+                {step === ScanStep.SCANNING && <span>Ejecución de diagnóstico en curso</span>}
+                {step === ScanStep.RESULTS && <span>Resultados del escaneo</span>}
+              </div>
+              
+              <div className="p-4 bg-black">
+                {step === ScanStep.INSTRUCTIONS && (
+                  <>
+                    <div className="mb-4 p-2 bg-zinc-900 border border-zinc-800 rounded">
+                      <p className="text-amber-400 mb-2 font-bold">$ ./iniciar_conexion.sh</p>
+                      <p className="text-zinc-400 text-xs mb-3">Para iniciar el diagnóstico OBD, siga estos pasos:</p>
+                      
+                      <div className="space-y-4 ml-3 mt-4">
+                        <div className="flex items-start">
+                          <div className="text-amber-400 mr-2">01:</div>
+                          <div>
+                            <p className="text-zinc-300">Conecta el escáner al puerto OBD-II de tu vehículo</p>
+                            <p className="text-zinc-500 text-xs mt-1">Ubicado generalmente debajo del tablero del lado del conductor</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start">
+                          <div className="text-amber-400 mr-2">02:</div>
+                          <div>
+                            <p className="text-zinc-300">Empareja el dispositivo por Bluetooth</p>
+                            <div className="flex items-center mt-1 p-1.5 bg-zinc-950 rounded border border-zinc-800 inline-block">
+                              <Bluetooth className="h-3 w-3 text-amber-400 mr-1.5" />
+                              <span className="text-xs text-zinc-400 font-mono">OBD-II_Scanner_2387</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start">
+                          <div className="text-amber-400 mr-2">03:</div>
+                          <div>
+                            <p className="text-zinc-300">Activa el contacto del vehículo</p>
+                            <p className="text-zinc-500 text-xs mt-1">Gira la llave o presiona el botón start sin arrancar el motor</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border border-zinc-800 rounded p-2 bg-zinc-900">
+                        <div className="flex items-center">
+                          <div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse mr-2"></div>
+                          <span className="text-xs text-zinc-400">Sistema listo para {isWebBluetoothSupported() ? 'conectar con escáner OBD2' : 'simular escaneo'}</span>
+                        </div>
+                        <Button 
+                          className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-1 h-auto text-xs rounded-sm"
+                          onClick={isWebBluetoothSupported() ? connectOBD : startScan}
+                        >
+                          {isWebBluetoothSupported() ? 'CONECTAR OBD2' : 'INICIAR ESCANEO VIRTUAL'}
+                        </Button>
+                      </div>
+                      
+                      {/* Opción para ingresar código manualmente */}
+                      <div className="border border-zinc-800 rounded p-2 bg-zinc-900">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center">
+                            <Terminal className="h-3.5 w-3.5 text-zinc-400 mr-2" />
+                            <span className="text-xs text-zinc-400">
+                              {showManualInput 
+                                ? "Ingrese el código OBD" 
+                                : "¿Conoce el código de error OBD?"}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost"
+                            className="h-auto py-1 px-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-zinc-800"
+                            onClick={() => setShowManualInput(!showManualInput)}
+                          >
+                            {showManualInput ? 'CANCELAR' : 'INGRESAR CÓDIGO'}
+                          </Button>
+                        </div>
+                        
+                        {showManualInput && (
+                          <div className="flex space-x-2">
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                                placeholder="Ej: P0300"
+                                maxLength={5}
+                                className="w-full bg-black border border-zinc-800 rounded px-3 py-1.5 text-zinc-300 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
+                              />
+                            </div>
+                            <Button 
+                              className="bg-zinc-800 hover:bg-zinc-700 text-amber-400 px-3 py-1 h-auto text-xs rounded-sm font-mono"
+                              onClick={processManualCode}
+                              disabled={!manualCode}
+                            >
+                              PROCESAR
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {step === ScanStep.CONNECTING && (
+                  <div className="p-2 bg-zinc-950 border border-zinc-800 rounded">
+                    <p className="text-amber-400 mb-2">$ ./connect_bluetooth.sh --device=obd2 --scan</p>
+                    
+                    <div className="space-y-1 mt-3">
+                      {connectionMessages.map((message, index) => (
+                        <div key={index} className="flex">
+                          <span className="text-zinc-500 mr-2">[{String(index + 1).padStart(2, '0')}]</span>
+                          <span className="text-zinc-300">{message}</span>
+                        </div>
+                      ))}
+                      
+                      {isConnecting && (
+                        <div className="flex items-center">
+                          <span className="text-zinc-500 mr-2">[{String(connectionMessages.length + 1).padStart(2, '0')}]</span>
+                          <span className="inline-block h-4 w-2 bg-amber-400 animate-blink"></span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-6 flex items-center justify-between px-3 py-2 bg-zinc-900 rounded border border-zinc-800">
+                      <div className="flex items-center">
+                        <Bluetooth className="h-3 w-3 text-amber-400 mr-2 animate-pulse" />
+                        <span className="text-xs text-zinc-400">Escaneando dispositivos Bluetooth...</span>
+                      </div>
+                      {isConnecting && (
+                        <Button 
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-3 py-1 h-auto text-xs rounded-sm"
+                          onClick={() => {
+                            setStep(ScanStep.INSTRUCTIONS);
+                            setIsConnecting(false);
+                            setConnectionMessages([]);
+                            if (obdDevice) {
+                              obdDevice.gatt?.disconnect();
+                            }
+                          }}
+                        >
+                          CANCELAR
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {step === ScanStep.SCANNING && (
+                  <div className="p-2 bg-zinc-950 border border-zinc-800 rounded">
+                    <p className="text-amber-400 mb-2">$ ./obd_scanner --mode=full --protocol=auto</p>
+                    
+                    <div className="space-y-1 mt-3">
+                      {scanText.map((line, index) => (
+                        <div key={index} className="flex">
+                          <span className="text-zinc-500 mr-2">[{String(index + 1).padStart(2, '0')}]</span>
+                          <span className="text-zinc-300">{line}</span>
+                        </div>
+                      ))}
+                      
+                      {scanText.length < 7 && (
+                        <div className="flex items-center">
+                          <span className="text-zinc-500 mr-2">[{String(scanText.length + 1).padStart(2, '0')}]</span>
+                          <span className="inline-block h-4 w-2 bg-amber-400 animate-blink"></span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-6 flex justify-between items-center px-3 py-2 bg-zinc-900 rounded border border-zinc-800">
+                      <div className="flex items-center">
+                        <Activity className="h-3 w-3 text-amber-400 mr-2" />
+                        <span className="text-xs text-zinc-400">Progreso: {Math.min(Math.round((scanText.length / 7) * 100), 100)}%</span>
+                      </div>
+                      <div className="h-1 w-32 bg-zinc-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-amber-500 rounded-full" 
+                          style={{ width: `${Math.min(Math.round((scanText.length / 7) * 100), 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === ScanStep.RESULTS && (
+                  <>
+                    <div className="p-3 bg-zinc-950 border border-zinc-800 rounded mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <Terminal className="h-4 w-4 text-amber-400 mr-2" />
+                          <span className="text-xs text-amber-400 uppercase font-bold">Reporte de Diagnóstico</span>
+                        </div>
+                        <span className="text-xs text-zinc-500 font-mono">
+                          {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {results.map((result, index) => (
+                          <div key={index} className="border border-zinc-800 rounded overflow-hidden">
+                            <div className={`p-2 flex justify-between items-center ${result.severity === 'alta' ? 'bg-red-900/20 border-b border-red-800/30' : result.severity === 'media' ? 'bg-amber-900/20 border-b border-amber-800/30' : 'bg-green-900/20 border-b border-green-800/30'}`}>
+                              <div className="flex items-center">
+                                <AlertCircle className={`h-4 w-4 mr-2 ${getTerminalSeverityColor(result.severity)}`} />
+                                <span className={`font-mono font-bold ${getTerminalSeverityColor(result.severity)}`}>
+                                  {result.code}
+                                </span>
+                              </div>
+                              <div className={`text-xs rounded-sm px-1.5 py-0.5 ${getTerminalSeverityColor(result.severity)}`}>
+                                NIVEL: {getSeverityLabel(result.severity).toUpperCase()}
+                              </div>
+                            </div>
+                            
+                            <div className="p-3 bg-zinc-950">
+                              <p className="text-zinc-300 mb-2 font-mono">{result.description}</p>
+                              
+                              <div className="mt-3 bg-zinc-900 p-2 rounded border border-zinc-800">
+                                {/* Causas probables */}
+                                <p className="text-xs text-zinc-400 mb-2 font-bold">CAUSAS PROBABLES:</p>
+                                <ul className="mb-3 text-xs text-zinc-300 pl-2 space-y-1">
+                                  {getCodeData(result.code).causas.map((causa, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                      <span className="text-amber-400 mr-1">•</span>
+                                      <span>{causa}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                
+                                {/* Refacciones sugeridas */}
+                                <p className="text-xs text-zinc-400 mb-2 font-bold">REFACCIONES SUGERIDAS:</p>
+                                <ul className="mb-3 text-xs text-zinc-300 pl-2 space-y-1">
+                                  {getCodeData(result.code).refacciones.map((refaccion, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                      <span className="text-green-400 mr-1">•</span>
+                                      <span>{refaccion}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                
+                                <Button className="mt-3 bg-amber-500 hover:bg-amber-600 text-black w-full h-auto py-1.5 text-xs font-bold rounded-sm" asChild>
+                                  <Link href={`/diagnostics/details/${result.code}`}>
+                                    BUSCAR REFACCIONES COMPATIBLES
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 items-center">
+                      <Button 
+                        className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 h-auto py-2 text-xs border border-zinc-700 rounded-sm"
+                      >
+                        EXPORTAR INFORME
+                      </Button>
+                      <Button 
+                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-black h-auto py-2 text-xs font-bold rounded-sm" 
+                        asChild
+                      >
+                        <Link href="/">
+                          FINALIZAR
+                        </Link>
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Terminal footer with system status */}
+          <div className="mt-4 bg-zinc-900 border border-zinc-800 rounded-md p-3 font-mono text-xs">
+            <div className="flex items-center mb-2 text-zinc-400">
+              <ShieldAlert className="h-3 w-3 mr-1.5 text-amber-400" />
+              <span>ESTADO DEL SISTEMA</span>
+            </div>
+            <div className="space-y-1.5 pl-2">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Scanner OBD:</span>
+                <span className="text-amber-400">{obdDevice ? 'Conectado' : 'Desconectado'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Dispositivo:</span>
+                <span className="text-amber-400">{obdDevice?.name || 'Ninguno'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Modo:</span>
+                <span className="text-amber-400">{isWebBluetoothSupported() ? 'Bluetooth' : 'Simulación'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
