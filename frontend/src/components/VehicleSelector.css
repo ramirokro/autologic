@@ -1,0 +1,85 @@
+.vehicle-selector {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.vehicle-selector h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: #333;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 0.75rem;
+}
+
+.selector-group {
+  margin-bottom: 1.25rem;
+}
+
+.selector-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.selector-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.selector-group select:focus {
+  outline: none;
+  border-color: #4facfe;
+  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+}
+
+.selector-group select:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.selector-loading {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.selector-error {
+  padding: 0.75rem;
+  background-color: #fee2e2;
+  border-left: 3px solid #ef4444;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.selected-vehicle {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f0f9ff;
+  border-radius: 6px;
+  border-left: 4px solid #4facfe;
+}
+
+.selected-vehicle h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.selected-vehicle p {
+  margin: 0;
+  font-weight: 600;
+  color: #1e40af;
+}

@@ -1,0 +1,290 @@
+.diagnostic-result {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.result-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.vehicle-info {
+  background-color: #1a1a2e;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.result-severity-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background-color: #f3f4f6;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+}
+
+.severity-label {
+  font-weight: 600;
+  margin-right: 1rem;
+  color: #4b5563;
+}
+
+.severity-indicator {
+  padding: 0.35rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.severity-indicator.low {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.severity-indicator.medium {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.severity-indicator.high {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.severity-indicator.critical {
+  background-color: #7f1d1d;
+  color: white;
+}
+
+.result-section {
+  margin-bottom: 2rem;
+}
+
+.result-section h3 {
+  font-size: 1.15rem;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #1f2937;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.result-content {
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.causes-list, .actions-list {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.causes-list li, .actions-list li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.actions-list li {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.parts-section {
+  background-color: #f9fafb;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.part-card {
+  background-color: white;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.part-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.part-urgency-icon {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.part-name {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.part-description {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.part-urgency {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.urgency-label {
+  margin-right: 0.5rem;
+  color: #6b7280;
+}
+
+.urgency-value {
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.urgency-value.low {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.urgency-value.medium {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.urgency-value.high {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.urgency-value.critical {
+  background-color: #7f1d1d;
+  color: white;
+}
+
+.find-part-btn {
+  background-color: #4facfe;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.find-part-btn:hover {
+  background-color: #3b82f6;
+}
+
+.result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.save-btn {
+  background-color: #4facfe;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #3b82f6;
+}
+
+.share-btn {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.share-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.print-btn {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.print-btn:hover {
+  background-color: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .result-columns {
+    grid-template-columns: 1fr;
+  }
+  
+  .parts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .vehicle-info {
+    margin-top: 0.75rem;
+  }
+  
+  .parts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .result-actions {
+    flex-direction: column;
+  }
+}
