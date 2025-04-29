@@ -1,0 +1,25 @@
+
+Estructura del Proyecto AutoLogic:
+
+├── backend/                    # Backend Python con FastAPI
+│   ├── app/                   
+│   │   ├── main.py           # Punto de entrada backend
+│   │   └── smartcar_client.py # Cliente SmartCar
+│
+├── client/                     # Frontend React/TypeScript
+│   ├── src/
+│   │   ├── components/        # Componentes React
+│   │   ├── pages/            # Páginas de la aplicación
+│   │   └── lib/              # Utilidades y contextos
+│
+├── server/                     # Servidor Express
+│   ├── controllers/           # Controladores de rutas
+│   ├── services/             # Servicios (Anthropic, Shopify)
+│   └── utils/                # Utilidades
+│
+├── data/                      # Datos CSV
+│   ├── historical_vehicles.csv
+│   └── mexican_vehicles.csv
+│
+├── scripts/                   # Scripts de utilidad
+└── shared/                    # Código compartido

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba API Shopify</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 70%;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .product {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .product img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-right: 15px;
+        }
+        .product-info h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .price {
+            font-weight: bold;
+            color: #16a085;
+        }
+        .actions {
+            margin-top: 10px;
+        }
+        .actions a {
+            padding: 5px 10px;
+            background-color: #2ecc71;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .loading {
+            display: none;
+            color: #7f8c8d;
+        }
+        .error {
+            color: #e74c3c;
+            display: none;
+            margin-top: 10px;
+        }
+        .vehicle-selector {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-right: 10px;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buscador de Refacciones</h1>
+        
+        <div class="vehicle-selector">
+            <h3>Selecciona tu vehículo</h3>
+            <div>
+                <select id="year">
+                    <option value="">Año</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                </select>
+                <select id="make">
+                    <option value="">Marca</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Chevrolet">Chevrolet</option>
+                </select>
+                <select id="model">
+                    <option value="">Modelo</option>
+                    <option value="Corolla">Corolla</option>
+                    <option value="Civic">Civic</option>
+                    <option value="Versa">Versa</option>
+                    <option value="F-150">F-150</option>
+                    <option value="Cruze">Cruze</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Buscar refacciones (ej: filtro de aceite, balatas, etc)">
+            <button id="search-button">Buscar</button>
+        </div>
+        
+        <div class="loading" id="loading">Buscando productos...</div>
+        <div class="error" id="error">No se pudieron cargar los resultados. Intenta nuevamente.</div>
+        
+        <div class="results" id="results"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const yearSelect = document.getElementById('year');
+            const makeSelect = document.getElementById('make');
+            const modelSelect = document.getElementById('model');
+            const resultsContainer = document.getElementById('results');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            
+            searchButton.addEventListener('click', searchProducts);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchProducts();
+                }
+            });
+            
+            function searchProducts() {
+                const searchTerm = searchInput.value.trim();
+                const year = yearSelect.value;
+                const make = makeSelect.value;
+                const model = modelSelect.value;
+                
+                if (!searchTerm) {
+                    alert('Por favor ingresa un término de búsqueda');
+                    return;
+                }
+                
+                // Construir consulta con datos del vehículo si están disponibles
+                let fullQuery = searchTerm;
+                if (make) fullQuery += ` ${make}`;
+                if (model) fullQuery += ` ${model}`;
+                if (year) fullQuery += ` ${year}`;
+                
+                resultsContainer.innerHTML = '';
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                
+                fetch('/api/shopify-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: fullQuery })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingElement.style.display = 'none';
+                    displayResults(data.productos);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingElement.style.display = 'none';
+                    errorElement.style.display = 'block';
+                });
+            }
+            
+            function displayResults(productos) {
+                if (!productos || productos.length === 0) {
+                    resultsContainer.innerHTML = '<p>No se encontraron productos para tu búsqueda.</p>';
+                    return;
+                }
+                
+                let html = '';
+                productos.forEach(producto => {
+                    html += `
+                        <div class="product">
+                            ${producto.imagen ? `<img src="${producto.imagen}" alt="${producto.nombre}">` : ''}
+                            <div class="product-info">
+                                <h3>${producto.nombre}</h3>
+                                <div class="price">$${parseFloat(producto.precio).toFixed(2)} MXN</div>
+                                <div class="actions">
+                                    <a href="${producto.url}" target="_blank">Ver en tienda</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsContainer.innerHTML = html;
+            }
+        });
+    </script>
+</body>
+</html>
