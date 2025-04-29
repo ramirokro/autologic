@@ -1,0 +1,9 @@
+<svg width="240" height="80" viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Barras diagonales -->
+  <path d="M150 30L170 50" stroke="#3B82F6" stroke-width="10" />
+  <path d="M170 30L190 50" stroke="#4B5563" stroke-width="10" />
+  <path d="M190 30L210 50" stroke="#22C55E" stroke-width="10" />
+  
+  <!-- Texto "autologic" -->
+  <text x="120" y="75" font-family="Arial, sans-serif" font-weight="bold" font-size="40" text-anchor="middle" fill="white">autologic</text>
+</svg>

@@ -1,0 +1,73 @@
+/* Estilos para la animación del logo de Autologic */
+.terminal-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.bars {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.bar {
+  width: 10px;
+  height: 20px;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: slideIn 0.5s forwards;
+}
+
+.bar1 { background: #00ffcc; animation-delay: 0.3s; }
+.bar2 { background: #00ff88; animation-delay: 0.6s; }
+.bar3 { background: #00ff44; animation-delay: 0.9s; }
+
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.typewriter {
+  display: flex;
+  font-size: 1rem;
+  color: #00ff88;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.text {
+  width: 0;
+  animation: typing 2s steps(10) forwards;
+  animation-delay: 1s;
+}
+
+.cursor {
+  animation: blink 0.8s infinite;
+  margin-left: 2px;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 8ch }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0 }
+}
+
+/* Media queries para responsive */
+@media (max-width: 768px) {
+  .bar {
+    width: 8px;
+    height: 16px;
+  }
+  
+  .typewriter {
+    font-size: 0.8rem;
+  }
+}
