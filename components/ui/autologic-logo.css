@@ -1,0 +1,80 @@
+/* Estilos para la animación del logo de Autologic - Integrados directamente en el componente React */
+
+.terminal-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.terminal-logo .bars {
+  margin-bottom: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.terminal-logo .bar {
+  width: 8px;
+  height: 16px;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: autologicSlideIn 0.5s forwards;
+}
+
+.terminal-logo .bar1 { background: #00ffcc; animation-delay: 0.3s; }
+.terminal-logo .bar2 { background: #00ff88; animation-delay: 0.6s; }
+.terminal-logo .bar3 { background: #00ff44; animation-delay: 0.9s; }
+
+@keyframes autologicSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.terminal-logo .typewriter {
+  display: flex;
+  font-size: 0.85rem;
+  color: #00ff88;
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+}
+
+.terminal-logo .text {
+  width: 0;
+  animation: autologicTyping 2s steps(10) forwards;
+  animation-delay: 1s;
+}
+
+.terminal-logo .cursor {
+  animation: autologicBlink 0.8s infinite;
+  margin-left: 1px;
+}
+
+@keyframes autologicTyping {
+  from { width: 0 }
+  to { width: 8ch }
+}
+
+@keyframes autologicBlink {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0 }
+}
+
+/* Modificadores de tamaño */
+.terminal-logo.size-xs .bar { width: 4px; height: 8px; }
+.terminal-logo.size-xs .typewriter { font-size: 0.6rem; }
+.terminal-logo.size-xs .bars { margin-bottom: 2px; gap: 2px; }
+
+.terminal-logo.size-sm .bar { width: 6px; height: 12px; }
+.terminal-logo.size-sm .typewriter { font-size: 0.7rem; }
+.terminal-logo.size-sm .bars { margin-bottom: 3px; gap: 3px; }
+
+.terminal-logo.size-lg .bar { width: 12px; height: 24px; }
+.terminal-logo.size-lg .typewriter { font-size: 1.2rem; }
+.terminal-logo.size-lg .bars { margin-bottom: 8px; gap: 5px; }
+
+.terminal-logo.size-xl .bar { width: 16px; height: 32px; }
+.terminal-logo.size-xl .typewriter { font-size: 1.5rem; }
+.terminal-logo.size-xl .bars { margin-bottom: 10px; gap: 6px; }
