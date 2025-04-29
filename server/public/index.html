@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autologic</title>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #000;
+      color: #0f0;
+      padding: 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .console {
+      width: 100%;
+      max-width: 800px;
+      border: 1px solid #333;
+      background-color: #0a0a0a;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    }
+    .line {
+      margin: 5px 0;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background-color: #0f0;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="console">
+    <div class="line">Autologic System v1.0</div>
+    <div class="line">Initializing...</div>
+    <div class="line">Loading diagnostic modules...</div>
+    <div class="line">OBD-II interface ready.</div>
+    <div class="line">AI Diagnostic Engine online.</div>
+    <div class="line">System ready.</div>
+    <div class="line">
+      > <span class="cursor"></span>
+    </div>
+  </div>
+  
+  <script>
+    // Esta página solo es un fallback para el servidor.
+    // La aplicación real se sirve a través de Vite
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
+  </script>
+</body>
+</html>
