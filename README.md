@@ -109,6 +109,21 @@ La aplicación estará disponible en:
 - Backend API: http://localhost:8000
 - Express Server: http://localhost:3000
 
+## Pruebas
+
+Para ejecutar la suite de pruebas automática se utiliza `pytest`.
+1. Instala las dependencias necesarias para Python:
+```bash
+pip install -r backend/requirements.txt pytest
+```
+
+2. Ejecuta todas las pruebas con:
+```bash
+pytest
+```
+
+Esto validará que los endpoints básicos del API funcionen correctamente.
+
 ## Capturas de pantalla
 
 ![Interfaz de diagnóstico](./client/public/screenshot-terminal.png)
