@@ -66,3 +66,15 @@ Servicios externos (SmartCar API, proveedores OBD2)
 - Backups automáticos de base de datos.
 - Actualización frecuente del modelo de IA según feedback de usuarios.
 
+
+## Inicio Rápido
+Para probar el prototipo del backend se incluye el script `start_nextgen.sh`. Ejecuta:
+
+```bash
+pip install -r backend/requirements.txt
+pip install -r requirements.txt  # dependencias generales
+./start_nextgen.sh
+```
+
+El API quedará disponible en `http://localhost:8100`.
+

@@ -6,6 +6,7 @@
 ## Descripción
 
 Autologic es una plataforma avanzada de diagnóstico automotriz con integración a Shopify, que utiliza inteligencia artificial para interpretar códigos OBD2 y problemas reportados por los usuarios. La plataforma ofrece una experiencia de diagnóstico automotriz completa con una interfaz de tipo terminal/consola, recomendaciones de refacciones específicas y generación de reportes PDF profesionales.
+Para el nuevo prototipo denominado **NextGen AutoDiag**, consulta [docs/nextgen_app.md](docs/nextgen_app.md).
 
 ## Características principales
 
